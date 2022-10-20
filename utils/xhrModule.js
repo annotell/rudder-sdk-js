@@ -103,12 +103,11 @@ class XHRQueue {
   enqueue(message, type) {
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: `Basic ${btoa(`${this.writeKey}:`)}`,
       AnonymousId: btoa(message.anonymousId),
     };
     // add items to the queue
     this.payloadQueue.addItem({
-      url: `${this.url}/v1/${type}`,
+      url: `${this.url}/${type}?api_key=${this.writeKey}`,
       headers,
       message,
     });
