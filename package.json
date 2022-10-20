@@ -1,5 +1,5 @@
 {
-  "name": "rudder-analytics",
+  "name": "@kognic/rudder-analytics",
   "version": "2.17.0",
   "description": "",
   "main": "./dist/browser.min.js",
@@ -29,7 +29,8 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint . || exit 1",
     "prepare": "husky install",
-    "clean": "find dist -type f -name '*.js' -delete && find dist -type f -name '*.js.map' -delete && rm -rf dist/integrations"
+    "clean": "find dist -type f -name '*.js' -delete && find dist -type f -name '*.js.map' -delete && rm -rf dist/integrations",
+    "artifactregistry-login": "npx google-artifactregistry-auth"
   },
   "author": "",
   "license": "ISC",
