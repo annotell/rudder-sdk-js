@@ -1,4 +1,4 @@
-declare module "rudder-sdk-js" {
+declare module "@kognic/rudder-sdk-js" {
   /**
    * Represents the integration options object
    * Example usages:
