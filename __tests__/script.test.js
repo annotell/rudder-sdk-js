@@ -77,9 +77,9 @@ describe('Test suite for the SDK', () => {
 
     expect(global.rudderanalytics.push).not.toBe(Array.prototype.push);
 
-    // one source config endpoint call and one implicit page call
+    // one implicit page call
     // Refer to above 'beforeEach'
-    expect(xhrMock.send).toHaveBeenCalledTimes(2);
+    expect(xhrMock.send).toHaveBeenCalledTimes(1);
   });
 
   it('If APIs are called, then appropriate network requests are made', () => {
@@ -89,8 +89,8 @@ describe('Test suite for the SDK', () => {
     rudderanalytics.group('jest-group');
     rudderanalytics.alias('new-jest-user', 'jest-user');
 
-    // one source config endpoint call and above API requests
-    expect(xhrMock.send).toHaveBeenCalledTimes(6);
+    // above API requests
+    expect(xhrMock.send).toHaveBeenCalledTimes(5);
   });
 
   describe("Test group for 'getAnonymousId' API", () => {

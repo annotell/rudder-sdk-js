@@ -1035,19 +1035,20 @@ class Analytics {
           this.processResponse(200, res);
         }
       }
-      return;
+      // return;
     }
 
-    let configUrl = getConfigUrl(writeKey);
-    if (options && options.configUrl) {
-      configUrl = getUserProvidedConfigUrl(options.configUrl, configUrl);
-    }
+    // #### Commented this out since we don't care about the config
+    // let configUrl = getConfigUrl(writeKey);
+    // if (options && options.configUrl) {
+    //   configUrl = getUserProvidedConfigUrl(options.configUrl, configUrl);
+    // }
 
-    try {
-      getJSONTrimmed(this, configUrl, writeKey, this.processResponse);
-    } catch (error) {
-      handleError(error);
-    }
+    // try {
+    //   getJSONTrimmed(this, configUrl, writeKey, this.processResponse);
+    // } catch (error) {
+    //   handleError(error);
+    // }
   }
 
   /**
