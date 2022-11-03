@@ -1008,35 +1008,36 @@ class Analytics {
     this.setInitialPageProperties();
     this.loaded = true;
 
-    if (options && options.destSDKBaseURL) {
-      this.destSDKBaseURL = removeTrailingSlashes(options.destSDKBaseURL);
-      if (!this.destSDKBaseURL) {
-        handleError({
-          message: '[Analytics] load:: CDN base URL is not valid',
-        });
-        throw Error('failed to load');
-      }
-    } else {
-      // Get the CDN base URL from the included 'rudder-analytics.min.js' script tag
-      const { sdkURL } = getSDKUrlInfo();
-      if (sdkURL) {
-        this.destSDKBaseURL = sdkURL.split('/').slice(0, -1).concat(CDN_INT_DIR).join('/');
-      }
-    }
-    if (options && options.getSourceConfig) {
-      if (typeof options.getSourceConfig !== 'function') {
-        handleError(new Error('option "getSourceConfig" must be a function'));
-      } else {
-        const res = options.getSourceConfig();
+    // #### Commented this out since we don't care about the sources and destinations
+    // if (options && options.destSDKBaseURL) {
+    //   this.destSDKBaseURL = removeTrailingSlashes(options.destSDKBaseURL);
+    //   if (!this.destSDKBaseURL) {
+    //     handleError({
+    //       message: '[Analytics] load:: CDN base URL is not valid',
+    //     });
+    //     throw Error('failed to load');
+    //   }
+    // } else {
+    //   // Get the CDN base URL from the included 'rudder-analytics.min.js' script tag
+    //   const { sdkURL } = getSDKUrlInfo();
+    //   if (sdkURL) {
+    //     this.destSDKBaseURL = sdkURL.split('/').slice(0, -1).concat(CDN_INT_DIR).join('/');
+    //   }
+    // }
+    // if (options && options.getSourceConfig) {
+    //   if (typeof options.getSourceConfig !== 'function') {
+    //     handleError(new Error('option "getSourceConfig" must be a function'));
+    //   } else {
+    //     const res = options.getSourceConfig();
 
-        if (res instanceof Promise) {
-          res.then((pRes) => this.processResponse(200, pRes)).catch(handleError);
-        } else {
-          this.processResponse(200, res);
-        }
-      }
-      // return;
-    }
+    //     if (res instanceof Promise) {
+    //       res.then((pRes) => this.processResponse(200, pRes)).catch(handleError);
+    //     } else {
+    //       this.processResponse(200, res);
+    //     }
+    //   }
+    //   // return;
+    // }
 
     // #### Commented this out since we don't care about the config
     // let configUrl = getConfigUrl(writeKey);
