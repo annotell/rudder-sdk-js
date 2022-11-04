@@ -92,6 +92,7 @@ class Analytics {
     // flag to indicate client integrations` ready status
     this.clientIntegrationsReady = false;
     this.uSession = UserSession;
+    this.fullVersion = false;
   }
 
   /**
@@ -126,31 +127,31 @@ class Analytics {
     }
   }
 
-  // allModulesInitialized(time = 0) {
-  //   return new Promise((resolve) => {
-  //     if (
-  //       this.clientIntegrations.every(
-  //         (intg) =>
-  //           this.dynamicallyLoadedIntegrations[`${configToIntNames[intg.name]}${INTG_SUFFIX}`] !=
-  //           undefined,
-  //       )
-  //     ) {
-  //       // logger.debug(
-  //       //   "All integrations loaded dynamically",
-  //       //   this.dynamicallyLoadedIntegrations
-  //       // );
-  //       resolve(this);
-  //     } else if (time >= 2 * MAX_WAIT_FOR_INTEGRATION_LOAD) {
-  //       // logger.debug("Max wait for dynamically loaded integrations over")
-  //       resolve(this);
-  //     } else {
-  //       this.pause(INTEGRATION_LOAD_CHECK_INTERVAL).then(() => {
-  //         // logger.debug("Check if all integration SDKs are loaded after pause")
-  //         return this.allModulesInitialized(time + INTEGRATION_LOAD_CHECK_INTERVAL).then(resolve);
-  //       });
-  //     }
-  //   });
-  // }
+  allModulesInitialized(time = 0) {
+    return new Promise((resolve) => {
+      if (
+        this.clientIntegrations.every(
+          (intg) =>
+            this.dynamicallyLoadedIntegrations[`${configToIntNames[intg.name]}${INTG_SUFFIX}`] !=
+            undefined,
+        )
+      ) {
+        // logger.debug(
+        //   "All integrations loaded dynamically",
+        //   this.dynamicallyLoadedIntegrations
+        // );
+        resolve(this);
+      } else if (time >= 2 * MAX_WAIT_FOR_INTEGRATION_LOAD) {
+        // logger.debug("Max wait for dynamically loaded integrations over")
+        resolve(this);
+      } else {
+        this.pause(INTEGRATION_LOAD_CHECK_INTERVAL).then(() => {
+          // logger.debug("Check if all integration SDKs are loaded after pause")
+          return this.allModulesInitialized(time + INTEGRATION_LOAD_CHECK_INTERVAL).then(resolve);
+        });
+      }
+    });
+  }
 
   /**
    * Function to execute the ready method callbacks
@@ -182,165 +183,165 @@ class Analytics {
   // }
 
   // Not needed since we don't make requests where we care about processing the events
-  // /**
-  //  * Process the response from control plane and
-  //  * call initialize for integrations
-  //  *
-  //  * @param {*} status
-  //  * @param {*} response
-  //  * @memberof Analytics
-  //  */
-  // processResponse(status, responseVal) {
-  //   try {
-  //     // logger.debug(`===in process response=== ${status}`);
+  /**
+   * Process the response from control plane and
+   * call initialize for integrations
+   *
+   * @param {*} status
+   * @param {*} response
+   * @memberof Analytics
+   */
+  processResponse(status, responseVal) {
+    try {
+      // logger.debug(`===in process response=== ${status}`);
 
-  //     let response = responseVal;
-  //     try {
-  //       if (typeof responseVal === 'string') {
-  //         response = JSON.parse(responseVal);
-  //       }
+      let response = responseVal;
+      try {
+        if (typeof responseVal === 'string') {
+          response = JSON.parse(responseVal);
+        }
 
-  //       // Do not proceed if the ultimate response value is not an object
-  //       if (!response || typeof response !== 'object' || Array.isArray(response)) {
-  //         throw new Error('Invalid source configuration');
-  //       }
-  //     } catch (err) {
-  //       handleError(err);
-  //       return;
-  //     }
+        // Do not proceed if the ultimate response value is not an object
+        if (!response || typeof response !== 'object' || Array.isArray(response)) {
+          throw new Error('Invalid source configuration');
+        }
+      } catch (err) {
+        handleError(err);
+        return;
+      }
 
-  //     // Fetch Error reporting enable option from sourceConfig
-  //     // const isErrorReportEnabled = get(
-  //     //   response.source.config,
-  //     //   'statsCollection.errorReports.enabled',
-  //     // );
+      // Fetch Error reporting enable option from sourceConfig
+      const isErrorReportEnabled = get(
+        response.source.config,
+        'statsCollection.errorReports.enabled',
+      );
 
-  //     // // Load Bugsnag only if it is enabled in the source config
-  //     // if (isErrorReportEnabled === true) {
-  //     //   // Fetch the name of the Error reporter from sourceConfig
-  //     //   const provider =
-  //     //     get(response.source.config, 'statsCollection.errorReports.provider') ||
-  //     //     DEFAULT_ERROR_REPORT_PROVIDER;
-  //     //   if (!ERROR_REPORT_PROVIDERS.includes(provider)) {
-  //     //     logger.error('Invalid error reporting provider value');
-  //     //   }
+      // Load Bugsnag only if it is enabled in the source config
+      if (isErrorReportEnabled === true) {
+        // Fetch the name of the Error reporter from sourceConfig
+        const provider =
+          get(response.source.config, 'statsCollection.errorReports.provider') ||
+          DEFAULT_ERROR_REPORT_PROVIDER;
+        if (!ERROR_REPORT_PROVIDERS.includes(provider)) {
+          logger.error('Invalid error reporting provider value');
+        }
 
-  //     //   if (provider === 'bugsnag') {
-  //     //     // Load Bugsnag client SDK
-  //     //     BugsnagLib.load();
-  //     //     BugsnagLib.init(response.source.id);
-  //     //   }
-  //     // }
+        if (provider === 'bugsnag') {
+          // Load Bugsnag client SDK
+          BugsnagLib.load();
+          BugsnagLib.init(response.source.id);
+        }
+      }
 
-  //     // response.source.destinations.forEach(function (destination, index) {
-  //     //   // logger.debug(
-  //     //   //   `Destination ${index} Enabled? ${destination.enabled} Type: ${destination.destinationDefinition.name} Use Native SDK? true`
-  //     //   // );
-  //     //   if (destination.enabled) {
-  //     //     this.clientIntegrations.push({
-  //     //       name: destination.destinationDefinition.name,
-  //     //       config: destination.config,
-  //     //     });
-  //     //   }
-  //     // }, this);
+      response.source.destinations.forEach(function (destination, index) {
+        // logger.debug(
+        //   `Destination ${index} Enabled? ${destination.enabled} Type: ${destination.destinationDefinition.name} Use Native SDK? true`
+        // );
+        if (destination.enabled) {
+          this.clientIntegrations.push({
+            name: destination.destinationDefinition.name,
+            config: destination.config,
+          });
+        }
+      }, this);
 
-  //     // intersection of config-plane native sdk destinations with sdk load time destination list
-  //     // this.clientIntegrations = findAllEnabledDestinations(
-  //     //   this.loadOnlyIntegrations,
-  //     //   this.clientIntegrations,
-  //     // );
-  //     // // Check if cookie consent manager is being set through load options
-  //     // if (Object.keys(this.cookieConsentOptions).length) {
-  //     //   // Call the cookie consent factory to initialise and return the type of cookie
-  //     //   // consent being set. For now we only support OneTrust.
-  //     //   try {
-  //     //     const cookieConsent = CookieConsentFactory.initialize(this.cookieConsentOptions);
-  //     //     // If cookie consent object is return we filter according to consents given by user
-  //     //     // else we do not consider any filtering for cookie consent.
-  //     //     this.clientIntegrations = this.clientIntegrations.filter((intg) => {
-  //     //       return (
-  //     //         !cookieConsent || // check if cookieconsent object is present and then do filtering
-  //     //         (cookieConsent && cookieConsent.isEnabled(intg.config))
-  //     //       );
-  //     //     });
-  //     //   } catch (e) {
-  //     //     handleError(e);
-  //     //   }
-  //     // }
+      // intersection of config-plane native sdk destinations with sdk load time destination list
+      this.clientIntegrations = findAllEnabledDestinations(
+        this.loadOnlyIntegrations,
+        this.clientIntegrations,
+      );
+      // Check if cookie consent manager is being set through load options
+      if (Object.keys(this.cookieConsentOptions).length) {
+        // Call the cookie consent factory to initialise and return the type of cookie
+        // consent being set. For now we only support OneTrust.
+        try {
+          const cookieConsent = CookieConsentFactory.initialize(this.cookieConsentOptions);
+          // If cookie consent object is return we filter according to consents given by user
+          // else we do not consider any filtering for cookie consent.
+          this.clientIntegrations = this.clientIntegrations.filter((intg) => {
+            return (
+              !cookieConsent || // check if cookieconsent object is present and then do filtering
+              (cookieConsent && cookieConsent.isEnabled(intg.config))
+            );
+          });
+        } catch (e) {
+          handleError(e);
+        }
+      }
 
-  //     // let suffix = ''; // default suffix
+      let suffix = ''; // default suffix
 
-  //     // Get the CDN base URL is rudder staging url
-  //     // const { isStaging } = getSDKUrlInfo();
-  //     // if (isStaging) {
-  //     //   suffix = '-staging'; // stagging suffix
-  //     // }
+      // Get the CDN base URL is rudder staging url
+      const { isStaging } = getSDKUrlInfo();
+      if (isStaging) {
+        suffix = '-staging'; // stagging suffix
+      }
 
-  //     leaveBreadcrumb('Starting device-mode initialization');
-  //     // logger.debug("this.clientIntegrations: ", this.clientIntegrations)
-  //     // Load all the client integrations dynamically
-  //     // this.clientIntegrations.forEach((intg) => {
-  //     //   const modName = configToIntNames[intg.name]; // script URL can be constructed from this
-  //     //   const pluginName = `${modName}${INTG_SUFFIX}`; // this is the name of the object loaded on the window
-  //     //   const modURL = `${this.destSDKBaseURL}/${modName}${suffix}.min.js`;
+      leaveBreadcrumb('Starting device-mode initialization');
+      logger.debug("this.clientIntegrations: ", this.clientIntegrations)
+      // Load all the client integrations dynamically
+      this.clientIntegrations.forEach((intg) => {
+        const modName = configToIntNames[intg.name]; // script URL can be constructed from this
+        const pluginName = `${modName}${INTG_SUFFIX}`; // this is the name of the object loaded on the window
+        const modURL = `${this.destSDKBaseURL}/${modName}${suffix}.min.js`;
 
-  //     //   if (!window.hasOwnProperty(pluginName)) {
-  //     //     ScriptLoader(pluginName, modURL, { isNonNativeSDK: true });
-  //     //   }
+        if (!window.hasOwnProperty(pluginName)) {
+          ScriptLoader(pluginName, modURL, { isNonNativeSDK: true });
+        }
 
-  //     //   const self = this;
-  //     //   const interval = setInterval(function () {
-  //     //     if (self.integrationSDKLoaded(pluginName, modName)) {
-  //     //       const intMod = window[pluginName];
-  //     //       clearInterval(interval);
+        const self = this;
+        const interval = setInterval(function () {
+          if (self.integrationSDKLoaded(pluginName, modName)) {
+            const intMod = window[pluginName];
+            clearInterval(interval);
 
-  //     //       // logger.debug(pluginName, " dynamically loaded integration SDK");
+            // logger.debug(pluginName, " dynamically loaded integration SDK");
 
-  //     //       let intgInstance;
-  //     //       try {
-  //     //         const msg = `[Analytics] processResponse :: trying to initialize integration name:: ${pluginName}`;
-  //     //         // logger.debug(msg);
-  //     //         leaveBreadcrumb(msg);
-  //     //         intgInstance = new intMod[modName](intg.config, self);
-  //     //         intgInstance.init();
+            let intgInstance;
+            try {
+              const msg = `[Analytics] processResponse :: trying to initialize integration name:: ${pluginName}`;
+              // logger.debug(msg);
+              leaveBreadcrumb(msg);
+              intgInstance = new intMod[modName](intg.config, self);
+              intgInstance.init();
 
-  //     //         // logger.debug(pluginName, " initializing destination");
+              // logger.debug(pluginName, " initializing destination");
 
-  //     //         self.isInitialized(intgInstance).then(() => {
-  //     //           // logger.debug(pluginName, " module init sequence complete");
-  //     //           self.dynamicallyLoadedIntegrations[pluginName] = intMod[modName];
-  //     //         });
-  //     //       } catch (e) {
-  //     //         e.message = `[Analytics] 'integration.init()' failed :: ${pluginName} :: ${e.message}`;
-  //     //         handleError(e);
-  //     //         self.failedToBeLoadedIntegration.push(intgInstance);
-  //     //       }
-  //     //     }
-  //     //   }, 100);
+              self.isInitialized(intgInstance).then(() => {
+                // logger.debug(pluginName, " module init sequence complete");
+                self.dynamicallyLoadedIntegrations[pluginName] = intMod[modName];
+              });
+            } catch (e) {
+              e.message = `[Analytics] 'integration.init()' failed :: ${pluginName} :: ${e.message}`;
+              handleError(e);
+              self.failedToBeLoadedIntegration.push(intgInstance);
+            }
+          }
+        }, 100);
 
-  //     //   setTimeout(() => {
-  //     //     clearInterval(interval);
-  //     //   }, MAX_WAIT_FOR_INTEGRATION_LOAD);
-  //     // });
+        setTimeout(() => {
+          clearInterval(interval);
+        }, MAX_WAIT_FOR_INTEGRATION_LOAD);
+      });
 
-  //     const self = this;
-  //     this.allModulesInitialized().then(() => {
-  //       if (!self.clientIntegrations || self.clientIntegrations.length == 0) {
-  //         // If no integrations are there to be loaded
-  //         // set clientIntegrationsReady to be true
-  //         this.clientIntegrationsReady = true;
-  //         // Execute the callbacks if any
-  //         this.executeReadyCallback();
-  //         this.toBeProcessedByIntegrationArray = [];
-  //         return;
-  //       }
+      const self = this;
+      this.allModulesInitialized().then(() => {
+        if (!self.clientIntegrations || self.clientIntegrations.length == 0) {
+          // If no integrations are there to be loaded
+          // set clientIntegrationsReady to be true
+          this.clientIntegrationsReady = true;
+          // Execute the callbacks if any
+          this.executeReadyCallback();
+          this.toBeProcessedByIntegrationArray = [];
+          return;
+        }
 
-  //       self.replayEvents(self);
-  //     });
-  //   } catch (error) {
-  //     handleError(error);
-  //   }
-  // }
+        self.replayEvents(self);
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  }
 
   // eslint-disable-next-line class-methods-use-this
   replayEvents(object) {
@@ -1010,48 +1011,49 @@ class Analytics {
     this.setInitialPageProperties();
     this.loaded = true;
 
-    // #### Commented this out since we don't care about the sources and destinations
-    // if (options && options.destSDKBaseURL) {
-    //   this.destSDKBaseURL = removeTrailingSlashes(options.destSDKBaseURL);
-    //   if (!this.destSDKBaseURL) {
-    //     handleError({
-    //       message: '[Analytics] load:: CDN base URL is not valid',
-    //     });
-    //     throw Error('failed to load');
-    //   }
-    // } else {
-    //   // Get the CDN base URL from the included 'rudder-analytics.min.js' script tag
-    //   const { sdkURL } = getSDKUrlInfo();
-    //   if (sdkURL) {
-    //     this.destSDKBaseURL = sdkURL.split('/').slice(0, -1).concat(CDN_INT_DIR).join('/');
-    //   }
-    // }
-    // if (options && options.getSourceConfig) {
-    //   if (typeof options.getSourceConfig !== 'function') {
-    //     handleError(new Error('option "getSourceConfig" must be a function'));
-    //   } else {
-    //     const res = options.getSourceConfig();
+    // Disabled by default since we don't care about the sdks and destinations
+    if (this.fullVersion) {
+      if (options && options.destSDKBaseURL) {
+        this.destSDKBaseURL = removeTrailingSlashes(options.destSDKBaseURL);
+        if (!this.destSDKBaseURL) {
+          handleError({
+            message: '[Analytics] load:: CDN base URL is not valid',
+          });
+          throw Error('failed to load');
+        }
+      } else {
+        // Get the CDN base URL from the included 'rudder-analytics.min.js' script tag
+        const { sdkURL } = getSDKUrlInfo();
+        if (sdkURL) {
+          this.destSDKBaseURL = sdkURL.split('/').slice(0, -1).concat(CDN_INT_DIR).join('/');
+        }
+      }
+      if (options && options.getSourceConfig) {
+        if (typeof options.getSourceConfig !== 'function') {
+          handleError(new Error('option "getSourceConfig" must be a function'));
+        } else {
+          const res = options.getSourceConfig();
 
-    //     if (res instanceof Promise) {
-    //       res.then((pRes) => this.processResponse(200, pRes)).catch(handleError);
-    //     } else {
-    //       this.processResponse(200, res);
-    //     }
-    //   }
-    //   // return;
-    // }
+          if (res instanceof Promise) {
+            res.then((pRes) => this.processResponse(200, pRes)).catch(handleError);
+          } else {
+            this.processResponse(200, res);
+          }
+        }
+        // return;
+      }
 
-    // #### Commented this out since we don't care about the config
-    // let configUrl = getConfigUrl(writeKey);
-    // if (options && options.configUrl) {
-    //   configUrl = getUserProvidedConfigUrl(options.configUrl, configUrl);
-    // }
+      let configUrl = getConfigUrl(writeKey);
+      if (options && options.configUrl) {
+        configUrl = getUserProvidedConfigUrl(options.configUrl, configUrl);
+      }
 
-    // try {
-    //   getJSONTrimmed(this, configUrl, writeKey, this.processResponse);
-    // } catch (error) {
-    //   handleError(error);
-    // }
+      try {
+        getJSONTrimmed(this, configUrl, writeKey, this.processResponse);
+      } catch (error) {
+        handleError(error);
+      }
+    }
   }
 
   /**
