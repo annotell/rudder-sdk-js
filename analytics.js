@@ -161,26 +161,25 @@ class Analytics {
     this.readyCallbacks.forEach((callback) => callback());
   }
 
-  // Not needed since we don't care about integrations
-  // /**
-  //  * A function to validate integration SDK is available in window
-  //  * and integration constructor is not undefined
-  //  * @param {string} pluginName
-  //  * @param {string} modName
-  //  * @returns boolean
-  //  */
-  // integrationSDKLoaded(pluginName, modName) {
-  //   try {
-  //     return (
-  //       window.hasOwnProperty(pluginName) &&
-  //       window[pluginName][modName] &&
-  //       typeof window[pluginName][modName].prototype.constructor !== 'undefined'
-  //     );
-  //   } catch (e) {
-  //     handleError(e);
-  //     return false;
-  //   }
-  // }
+  /**
+   * A function to validate integration SDK is available in window
+   * and integration constructor is not undefined
+   * @param {string} pluginName
+   * @param {string} modName
+   * @returns boolean
+   */
+  integrationSDKLoaded(pluginName, modName) {
+    try {
+      return (
+        window.hasOwnProperty(pluginName) &&
+        window[pluginName][modName] &&
+        typeof window[pluginName][modName].prototype.constructor !== 'undefined'
+      );
+    } catch (e) {
+      handleError(e);
+      return false;
+    }
+  }
 
   // Not needed since we don't make requests where we care about processing the events
   /**
@@ -1123,7 +1122,7 @@ class Analytics {
   initializeCallbacks() {
     Object.keys(this.methodToCallbackMapping).forEach((methodName) => {
       if (this.methodToCallbackMapping.hasOwnProperty(methodName)) {
-        this.on(methodName, () => {});
+        this.on(methodName, () => { });
       }
     });
   }
