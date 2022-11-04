@@ -92,6 +92,7 @@ class Analytics {
     // flag to indicate client integrations` ready status
     this.clientIntegrationsReady = false;
     this.uSession = UserSession;
+    this.fullVersion = false;
   }
 
   /**
@@ -180,6 +181,7 @@ class Analytics {
     }
   }
 
+  // Not needed since we don't make requests where we care about processing the events
   /**
    * Process the response from control plane and
    * call initialize for integrations
@@ -275,7 +277,7 @@ class Analytics {
       }
 
       leaveBreadcrumb('Starting device-mode initialization');
-      // logger.debug("this.clientIntegrations: ", this.clientIntegrations)
+      logger.debug("this.clientIntegrations: ", this.clientIntegrations)
       // Load all the client integrations dynamically
       this.clientIntegrations.forEach((intg) => {
         const modName = configToIntNames[intg.name]; // script URL can be constructed from this
@@ -1008,47 +1010,49 @@ class Analytics {
     this.setInitialPageProperties();
     this.loaded = true;
 
-    if (options && options.destSDKBaseURL) {
-      this.destSDKBaseURL = removeTrailingSlashes(options.destSDKBaseURL);
-      if (!this.destSDKBaseURL) {
-        handleError({
-          message: '[Analytics] load:: CDN base URL is not valid',
-        });
-        throw Error('failed to load');
-      }
-    } else {
-      // Get the CDN base URL from the included 'rudder-analytics.min.js' script tag
-      const { sdkURL } = getSDKUrlInfo();
-      if (sdkURL) {
-        this.destSDKBaseURL = sdkURL.split('/').slice(0, -1).concat(CDN_INT_DIR).join('/');
-      }
-    }
-    if (options && options.getSourceConfig) {
-      if (typeof options.getSourceConfig !== 'function') {
-        handleError(new Error('option "getSourceConfig" must be a function'));
+    // Disabled by default since we don't care about the sdks and destinations
+    if (this.fullVersion) {
+      if (options && options.destSDKBaseURL) {
+        this.destSDKBaseURL = removeTrailingSlashes(options.destSDKBaseURL);
+        if (!this.destSDKBaseURL) {
+          handleError({
+            message: '[Analytics] load:: CDN base URL is not valid',
+          });
+          throw Error('failed to load');
+        }
       } else {
-        const res = options.getSourceConfig();
-
-        if (res instanceof Promise) {
-          res.then((pRes) => this.processResponse(200, pRes)).catch(handleError);
-        } else {
-          this.processResponse(200, res);
+        // Get the CDN base URL from the included 'rudder-analytics.min.js' script tag
+        const { sdkURL } = getSDKUrlInfo();
+        if (sdkURL) {
+          this.destSDKBaseURL = sdkURL.split('/').slice(0, -1).concat(CDN_INT_DIR).join('/');
         }
       }
-      // return;
+      if (options && options.getSourceConfig) {
+        if (typeof options.getSourceConfig !== 'function') {
+          handleError(new Error('option "getSourceConfig" must be a function'));
+        } else {
+          const res = options.getSourceConfig();
+
+          if (res instanceof Promise) {
+            res.then((pRes) => this.processResponse(200, pRes)).catch(handleError);
+          } else {
+            this.processResponse(200, res);
+          }
+        }
+        // return;
+      }
+
+      let configUrl = getConfigUrl(writeKey);
+      if (options && options.configUrl) {
+        configUrl = getUserProvidedConfigUrl(options.configUrl, configUrl);
+      }
+
+      try {
+        getJSONTrimmed(this, configUrl, writeKey, this.processResponse);
+      } catch (error) {
+        handleError(error);
+      }
     }
-
-    // #### Commented this out since we don't care about the config
-    // let configUrl = getConfigUrl(writeKey);
-    // if (options && options.configUrl) {
-    //   configUrl = getUserProvidedConfigUrl(options.configUrl, configUrl);
-    // }
-
-    // try {
-    //   getJSONTrimmed(this, configUrl, writeKey, this.processResponse);
-    // } catch (error) {
-    //   handleError(error);
-    // }
   }
 
   /**
@@ -1118,7 +1122,7 @@ class Analytics {
   initializeCallbacks() {
     Object.keys(this.methodToCallbackMapping).forEach((methodName) => {
       if (this.methodToCallbackMapping.hasOwnProperty(methodName)) {
-        this.on(methodName, () => {});
+        this.on(methodName, () => { });
       }
     });
   }

@@ -1,6 +1,6 @@
 {
   "name": "@kognic/rudder-sdk-js",
-  "version": "2.17.1",
+  "version": "2.17.2",
   "description": "RudderStack Javascript SDK",
   "main": "index.js",
   "module": "index.es.js",
